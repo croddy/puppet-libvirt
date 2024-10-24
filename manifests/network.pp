@@ -80,17 +80,17 @@ define libvirt::network (
 ) {
   validate_bool ($autostart)
   validate_re ($ensure, '^(present|defined|enabled|running|undefined|absent)$',
-    'Ensure must be one of defined (present), enabled (running), or undefined (absent).')
+  'Ensure must be one of defined (present), enabled (running), or undefined (absent).')
 
-  include ::libvirt::params
+  include libvirt::params
 
   Exec {
     cwd         => '/',
     path        => '/bin:/usr/bin',
     user        => 'root',
     provider    => 'posix',
-    require     => Service[$::libvirt::params::libvirt_service],
-    environment => ['LC_ALL=en_US.utf8', ],
+    require     => Service[$libvirt::params::libvirt_service],
+    environment => ['LC_ALL=en_US.utf8',],
   }
 
   $ensure_file = $ensure? {
@@ -121,7 +121,7 @@ define libvirt::network (
           creates => $autostart_file,
         }
       }
-      if $ensure in [ 'enabled', 'running' ] {
+      if $ensure in ['enabled', 'running'] {
         exec { "virsh-net-start-${title}":
           command => "virsh net-start ${title}",
           require => Exec["virsh-net-define-${title}"],
@@ -139,13 +139,13 @@ define libvirt::network (
         onlyif  => "virsh -q net-list --all | grep -Eq '^\s*${title}\\s+inactive'",
         require => Exec["virsh-net-destroy-${title}"],
       }
-      file { [ $network_file, $autostart_file ]:
+      file { [$network_file, $autostart_file]:
         ensure  => absent,
         require => Exec["virsh-net-undefine-${title}"],
       }
     }
     default : {
-      fail ("${module_name} This default case should never be reached in Libvirt::Network{'${title}':} on node ${::fqdn}.")
+      fail ("${module_name} This default case should never be reached in Libvirt::Network{'${title}':} on node ${facts['networking']['fqdn']}.")
     }
   }
 }

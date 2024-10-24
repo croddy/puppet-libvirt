@@ -19,11 +19,12 @@ describe 'libvirt::network' do
   autostart_dir = "#{network_dir}/autostart"
 
   let(:title) { 'direct-net' }
-  let(:params) {{ :forward_mode => 'bridge', :forward_dev => 'eth0', :forward_interfaces => [ 'eth0', ] }}
+  let(:params) { { forward_mode: 'bridge', forward_dev: 'eth0', forward_interfaces: [ 'eth0' ] } }
 
-  it { should contain_libvirt__network('direct-net').with({ 'ensure' => 'present'} )}
-  it { should contain_exec("create-#{network_dir}/direct-net.xml").with({
-    'command' => "cat > #{network_dir}/direct-net.xml <<EOF
+  it { is_expected.to contain_libvirt__network('direct-net').with({ 'ensure' => 'present' }) }
+  it {
+    is_expected.to contain_exec("create-#{network_dir}/direct-net.xml").with({
+                                                                               'command' => "cat > #{network_dir}/direct-net.xml <<EOF
 <network>
   <name>direct-net</name>
   <forward dev='eth0' mode='bridge'>
@@ -32,10 +33,13 @@ describe 'libvirt::network' do
 </network>
 
 EOF",
-  })}
+                                                                             })
+  }
 
   context 'pxe boot network' do
     let(:title) { 'pxe' }
+    let(:params) { { forward_mode: 'nat', forward_dev: 'virbr0', bridge: 'virbr0', ip: [ ip ] } }
+
     dhcp = {
       'start' => '192.168.122.2',
       'end'   => '192.168.122.254',
@@ -46,11 +50,11 @@ EOF",
       'netmask' => '255.255.255.0',
       'dhcp'    => dhcp,
     }
-    let(:params) {{ :forward_mode => 'nat', :forward_dev => 'virbr0', :bridge => 'virbr0', :ip => [ ip ] }}
 
-    it { should contain_libvirt__network('pxe').with({ 'ensure' => 'present'} )}
-    it { should contain_exec("create-#{network_dir}/pxe.xml").with({
-    'command' => "cat > #{network_dir}/pxe.xml <<EOF
+    it { is_expected.to contain_libvirt__network('pxe').with({ 'ensure' => 'present' }) }
+    it {
+      is_expected.to contain_exec("create-#{network_dir}/pxe.xml").with({
+                                                                          'command' => "cat > #{network_dir}/pxe.xml <<EOF
 <network>
   <name>pxe</name>
   <forward dev='virbr0' mode='nat'/>
@@ -64,11 +68,14 @@ EOF",
 </network>
 
 EOF",
-  })}
+                                                                        })
+    }
   end
 
   context 'dual stack' do
     let(:title) { 'dual-stack' }
+    let(:params) { { forward_mode: 'nat', forward_dev: 'virbr0', bridge: 'virbr0', ip: [ ip ], ipv6: [ ipv6 ] } }
+
     dhcp = {
       'start' => '192.168.122.2',
       'end'   => '192.168.122.254',
@@ -83,11 +90,11 @@ EOF",
       'address' => '2001:db8:ca2:2::1',
       'prefix'  => '64',
     }
-    let(:params) {{ :forward_mode => 'nat', :forward_dev => 'virbr0', :bridge => 'virbr0', :ip => [ ip ], :ipv6 => [ ipv6 ] }}
 
-    it { should contain_libvirt__network('dual-stack').with({ 'ensure' => 'present'} )}
-    it { should contain_exec("create-#{network_dir}/dual-stack.xml").with({
-    'command' => "cat > #{network_dir}/dual-stack.xml <<EOF
+    it { is_expected.to contain_libvirt__network('dual-stack').with({ 'ensure' => 'present' }) }
+    it {
+      is_expected.to contain_exec("create-#{network_dir}/dual-stack.xml").with({
+                                                                                 'command' => "cat > #{network_dir}/dual-stack.xml <<EOF
 <network>
   <name>dual-stack</name>
   <forward dev='virbr0' mode='nat'/>
@@ -102,7 +109,7 @@ EOF",
 </network>
 
 EOF",
-  })}
+                                                                               })
+    }
   end
-
 end

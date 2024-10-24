@@ -26,12 +26,12 @@ class libvirt (
   $virtinst                  = true,
   $qemu                      = true,
   $radvd                     = false,
-  $libvirt_package           = $::libvirt::params::libvirt_package,
-  $libvirt_service           = $::libvirt::params::libvirt_service,
-  $virtinst_package          = $::libvirt::params::virtinst_package,
-  $radvd_package             = $::libvirt::params::radvd_package,
-  $sysconfig                 = $::libvirt::params::sysconfig,
-  $deb_default               = $::libvirt::params::deb_default,
+  $libvirt_package           = $libvirt::params::libvirt_package,
+  $libvirt_service           = $libvirt::params::libvirt_service,
+  $virtinst_package          = $libvirt::params::virtinst_package,
+  $radvd_package             = $libvirt::params::radvd_package,
+  $sysconfig                 = $libvirt::params::sysconfig,
+  $deb_default               = $libvirt::params::deb_default,
   # libvirtd.conf options
   $listen_tls                = undef,
   $listen_tcp                = undef,
@@ -41,11 +41,11 @@ class libvirt (
   $mdns_adv                  = undef,
   $auth_tcp                  = undef,
   $auth_tls                  = undef,
-  $unix_sock_group           = $::libvirt::params::unix_sock_group,
+  $unix_sock_group           = $libvirt::params::unix_sock_group,
   $unix_sock_ro_perms        = undef,
-  $auth_unix_ro              = $::libvirt::params::auth_unix_ro,
-  $unix_sock_rw_perms        = $::libvirt::params::unix_sock_rw_perms,
-  $auth_unix_rw              = $::libvirt::params::auth_unix_rw,
+  $auth_unix_ro              = $libvirt::params::auth_unix_ro,
+  $unix_sock_rw_perms        = $libvirt::params::unix_sock_rw_perms,
+  $auth_unix_rw              = $libvirt::params::auth_unix_rw,
   $unix_sock_dir             = undef,
   # qemu.conf options
   $qemu_vnc_listen           = undef,
@@ -60,10 +60,9 @@ class libvirt (
   $sasl2_qemu_mech_list      = undef,
   $sasl2_qemu_keytab         = undef,
   $sasl2_qemu_auxprop_plugin = undef,
-) inherits ::libvirt::params {
-
+) inherits libvirt::params {
   # Keep multiple templates, as close to the original as possible
-  if $::osfamily == 'RedHat' and versioncmp($::operatingsystemmajrelease, '8') >= 0 {
+  if $facts['os']['family'] == 'RedHat' and versioncmp($facts['os']['release']['major'], '8') >= 0 {
     $filesuffix = '-el8'
   } else {
     $filesuffix = ''
@@ -119,7 +118,7 @@ class libvirt (
     autostart    => true,
     forward_mode => 'nat',
     bridge       => 'virbr0',
-    ip           => [ $::libvirt::params::default_ip ],
+    ip           => [$libvirt::params::default_ip],
   }
 
   # The most useful libvirt-related packages
@@ -134,7 +133,7 @@ class libvirt (
       mode    => '0644',
       content => template("libvirt/sasl2/qemu-kvm.conf${filesuffix}.erb"),
       notify  => Service['libvirtd'],
-      require => [Package['libvirt'], Package['qemu-kvm']]
+      require => [Package['libvirt'], Package['qemu-kvm']],
     }
   }
   if $radvd {
@@ -165,6 +164,4 @@ class libvirt (
 
   # Create Optional networks
   create_resources(libvirt::network, $networks, $networks_defaults)
-
 }
-

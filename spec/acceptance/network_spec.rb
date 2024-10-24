@@ -4,7 +4,7 @@ describe 'libvirt::network' do
   network_dir = '/etc/libvirt/qemu/networks'
 
   context 'enable default network' do
-    it 'should enable the default network' do
+    it 'enables the default network' do
       pp = <<-EOS
          class { 'libvirt':
            defaultnetwork => true
@@ -12,7 +12,7 @@ describe 'libvirt::network' do
       EOS
 
       # Run it twice and test for idempotency
-      expect(apply_manifest(pp).exit_code).to_not eq(1)
+      expect(apply_manifest(pp).exit_code).not_to eq(1)
       expect(apply_manifest(pp).exit_code).to eq(0)
     end
 
@@ -24,7 +24,7 @@ describe 'libvirt::network' do
   end
 
   context 'network directly connected via bridge' do
-    it 'should create a network directly connected via a bridge' do
+    it 'creates a network directly connected via a bridge' do
       pp = <<-EOS
          class { 'libvirt': }
          libvirt::network { 'direct-net':
@@ -35,18 +35,18 @@ describe 'libvirt::network' do
       EOS
 
       # Run it twice and test for idempotency
-      expect(apply_manifest(pp).exit_code).to_not eq(1)
+      expect(apply_manifest(pp).exit_code).not_to eq(1)
       expect(apply_manifest(pp).exit_code).to eq(0)
     end
 
     describe file("#{network_dir}/direct-net.xml") do
-      it { should contain "<forward dev='eth0' mode='bridge'>" }
-      it { should contain "<interface dev='eth0'/>" }
+      it { is_expected.to contain "<forward dev='eth0' mode='bridge'>" }
+      it { is_expected.to contain "<interface dev='eth0'/>" }
     end
   end
 
   context 'network directly connected via autostarted bridge' do
-    it 'should create an autostarted network directly connected via a bridge' do
+    it 'creates an autostarted network directly connected via a bridge' do
       pp = <<-EOS
          class { 'libvirt': }
          libvirt::network { 'direct-net':
@@ -58,7 +58,7 @@ describe 'libvirt::network' do
       EOS
 
       # Run it twice and test for idempotency
-      expect(apply_manifest(pp).exit_code).to_not eq(1)
+      expect(apply_manifest(pp).exit_code).not_to eq(1)
       expect(apply_manifest(pp).exit_code).to eq(0)
     end
 
@@ -70,7 +70,7 @@ describe 'libvirt::network' do
   end
 
   context 'autostarted pxe boot via dhcp' do
-    it 'should create an autostarted network for booting from DHCP' do
+    it 'creates an autostarted network for booting from DHCP' do
       pp = <<-EOS
          class { 'libvirt': }
          $dhcp = {
@@ -94,7 +94,7 @@ describe 'libvirt::network' do
       EOS
 
       # Run it twice and test for idempotency
-      expect(apply_manifest(pp).exit_code).to_not eq(1)
+      expect(apply_manifest(pp).exit_code).not_to eq(1)
       expect(apply_manifest(pp).exit_code).to eq(0)
     end
 
@@ -106,7 +106,7 @@ describe 'libvirt::network' do
   end
 
   context 'autostarted dual-stack' do
-    it 'should create an autostarted network with NATed IPv4 network and an IPv6 address' do
+    it 'creates an autostarted network with NATed IPv4 network and an IPv6 address' do
       pp = <<-EOS
          class { 'libvirt': }
          $dhcp = {
@@ -133,7 +133,7 @@ describe 'libvirt::network' do
       EOS
 
       # Run it twice and test for idempotency
-      expect(apply_manifest(pp).exit_code).to_not eq(1)
+      expect(apply_manifest(pp).exit_code).not_to eq(1)
       expect(apply_manifest(pp).exit_code).to eq(0)
     end
 
@@ -149,5 +149,4 @@ describe 'libvirt::network' do
       end
     end
   end
-
 end

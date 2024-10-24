@@ -14,19 +14,19 @@
 
 require 'spec_helper'
 
-describe 'libvirt', :type => :class do
+describe 'libvirt', type: :class do
   let(:title) { 'libvirt' }
 
-  it { should contain_class('libvirt') }
-  it { should contain_file('/etc/libvirt/qemu/networks/autostart/default.xml') 
-       .with_ensure('absent')
+  it { is_expected.to contain_class('libvirt') }
+  it {
+    is_expected.to contain_file('/etc/libvirt/qemu/networks/autostart/default.xml')
+      .with_ensure('absent')
   }
 
   describe 'with default network enabled' do
-    let(:params) {{ :defaultnetwork => true }}
+    let(:params) { { defaultnetwork: true } }
 
-    it { should contain_class('libvirt') }
-    it { should contain_exec('virsh-net-autostart-default') }
+    it { is_expected.to contain_class('libvirt') }
+    it { is_expected.to contain_exec('virsh-net-autostart-default') }
   end
-
 end

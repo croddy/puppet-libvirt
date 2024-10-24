@@ -2,67 +2,64 @@ require 'rexml/document'
 require 'tempfile'
 
 Puppet::Type.type(:libvirt_pool).provide(:virsh) do
-
-  commands :virsh => 'virsh'
+  commands virsh: 'virsh'
 
   def self.instances
     list = virsh('-q', 'pool-list', '--all')
-    list.split(/\n/)[0..-1].map do |line|
-      values = line.strip.split(/ +/)
+    list.split(%r{\n})[0..-1].map do |line|
+      values = line.strip.split(%r{ +})
       new(
-        :name      => values[0],
-        :active    => values[1].match(/^act/)? :true : :false,
-        :autostart => values[2].match(/no/) ? :false : :true,
-        :provider  => self.name
+        name: values[0],
+        active: values[1].match?(%r{^act}) ? :true : :false,
+        autostart: values[2].match?(%r{no}) ? :false : :true,
+        provider: name,
       )
     end
   end
 
   def status
     list = virsh('-q', 'pool-list', '--all')
-    list.split(/\n/)[0..-1].detect do |line|
-      fields = line.strip.split(/ +/)
-      if (fields[0].match(/^#{resource[:name]}$/))
+    list.split(%r{\n})[0..-1].detect do |line|
+      fields = line.strip.split(%r{ +})
+      if %r{^#{resource[:name]}$}.match?(fields[0])
         return :present
       end
     end
-  return :absent
-
+    :absent
   end
 
   def self.prefetch(resources)
     pools = instances
     resources.keys.each do |name|
-      if provider = pools.find{ |pool| pool.name == name}
+      if provider = pools.find { |pool| pool.name == name }
         resources[name].provider = provider
       end
     end
   end
 
   def create
-    defined = self.definePool
-    if !defined
+    defined = definePool
+    unless defined
       # for some reason the pool has not been defined
       # malformed xml
       # or failed tmpfile creationa
       # or ?
-      raise Puppet::Error.new("Unable to define the pool")
+      raise Puppet::Error, 'Unable to define the pool'
     end
-    self.buildPool
+    buildPool
 
     @property_hash[:ensure] = :present
     should_active = @resource.should(:active)
-    unless self.active == should_active
+    unless active == should_active
       self.active = should_active
     end
     should_autostart = @resource.should(:autostart)
-    unless self.autostart == should_autostart
-      self.autostart = should_autostart
-    end
+    return if autostart == should_autostart
+    self.autostart = should_autostart
   end
 
   def destroy
-    self.destroyPool
+    destroyPool
     @property_hash.clear
   end
 
@@ -79,22 +76,19 @@ Puppet::Type.type(:libvirt_pool).provide(:virsh) do
       tmpFile.close
       tmpFile.unlink
     end
-    return result
+    result
   end
 
   def buildPool
-    begin
-      virsh('pool-build', '--pool', resource[:name])
-    rescue
-      # Unable to build the pool maybe because
-      # it is already defined (it this case we should consider
-      # to continue execution)
-      # or there is permission issue on the fs
-      # or ?
-      # in these cases we should consider raising something
-      notice("Unable to build the pool")
-    end
-
+    virsh('pool-build', '--pool', resource[:name])
+  rescue
+    # Unable to build the pool maybe because
+    # it is already defined (it this case we should consider
+    # to continue execution)
+    # or there is permission issue on the fs
+    # or ?
+    # in these cases we should consider raising something
+    notice('Unable to build the pool')
   end
 
   def destroyPool
@@ -111,7 +105,7 @@ Puppet::Type.type(:libvirt_pool).provide(:virsh) do
   end
 
   def active=(active)
-    if (active == :true)
+    if active == :true
       virsh 'pool-start', '--pool', resource[:name]
       @property_hash[:active] = 'true'
     else
@@ -125,7 +119,7 @@ Puppet::Type.type(:libvirt_pool).provide(:virsh) do
   end
 
   def autostart=(autostart)
-    if (autostart == :true)
+    if autostart == :true
       virsh 'pool-autostart', '--pool', resource[:name]
       @property_hash[:autostart] = :true
     else
@@ -134,14 +128,13 @@ Puppet::Type.type(:libvirt_pool).provide(:virsh) do
     end
   end
 
-
   def exists?
     @property_hash[:ensure] != :absent
   end
 
   def buildPoolXML(resource)
     root = REXML::Document.new
-    pool = root.add_element 'pool', {'type' => resource[:type]}
+    pool = root.add_element 'pool', { 'type' => resource[:type] }
     name = pool.add_element 'name'
     name.add_text resource[:name]
 
@@ -151,20 +144,20 @@ Puppet::Type.type(:libvirt_pool).provide(:virsh) do
     srcName = resource[:sourcename]
     srcFormat = resource[:sourceformat]
 
-    if (srcHost || srcPath || srcDev || srcName || srcFormat)
+    if srcHost || srcPath || srcDev || srcName || srcFormat
       source = pool.add_element 'source'
 
-      source.add_element('host', {'name' => srcHost})     if srcHost
-      source.add_element('dir', {'path' => srcPath})      if srcPath
-      source.add_element('format', {'type' => srcFormat}) if (srcFormat)
+      source.add_element('host', { 'name' => srcHost })     if srcHost
+      source.add_element('dir', { 'path' => srcPath })      if srcPath
+      source.add_element('format', { 'type' => srcFormat }) if srcFormat
 
-      if (srcDev)
+      if srcDev
         Array(srcDev).each do |dev|
-          source.add_element('device', {'path' => dev})
+          source.add_element('device', { 'path' => dev })
         end
       end
 
-      if (srcName)
+      if srcName
         srcNameEl = source.add_element 'name'
         srcNameEl.add_text srcName
       end
@@ -177,8 +170,6 @@ Puppet::Type.type(:libvirt_pool).provide(:virsh) do
       targetPathEl.add_text target
     end
 
-    return root.to_s
-
+    root.to_s
   end # buildPoolXML
-
 end

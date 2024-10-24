@@ -1,8 +1,8 @@
 Puppet::Type.newtype(:libvirt_pool) do
-@doc = %q{Manages libvirt pools
+  @doc = "Manages libvirt pools
 
-          Example : 
-            libvirt_pool { 'default' : 
+          Example :
+            libvirt_pool { 'default' :
               ensure => absent
             }
 
@@ -24,10 +24,9 @@ Puppet::Type.newtype(:libvirt_pool) do
             }
 
 
-        }
+        "
 
   ensurable do
-
     desc 'Manages the creation or the removal of a pool
     `present` means that the pool will be defined and created
     `absent` means that the pool will be purged from the system'
@@ -38,7 +37,7 @@ Puppet::Type.newtype(:libvirt_pool) do
     end
 
     newvalue(:absent) do
-      if (provider.exists?)
+      if provider.exists?
         provider.destroy
       end
     end
@@ -46,12 +45,11 @@ Puppet::Type.newtype(:libvirt_pool) do
     def retrieve
       provider.status
     end
-
   end
 
-  newparam(:name, :namevar => true) do
+  newparam(:name, namevar: true) do
     desc 'The pool name.'
-    newvalues(/^\S+$/)
+    newvalues(%r{^\S+$})
   end
 
   newparam(:type) do
@@ -60,33 +58,33 @@ Puppet::Type.newtype(:libvirt_pool) do
   end
 
   newparam(:sourcehost) do
-    desc 'The source host.'   
-    newvalues(/^\S+$/)
+    desc 'The source host.'
+    newvalues(%r{^\S+$})
   end
 
   newparam(:sourcepath) do
     desc 'The source path.'
-    newvalues(/(\/)?(\w)/)
+    newvalues(%r{(/)?(\w)})
   end
 
   newparam(:sourcedev) do
     desc 'The source device.'
-    newvalues(/(\/)?(\w)/)
+    newvalues(%r{(/)?(\w)})
   end
 
   newparam(:sourcename) do
     desc 'The source name.'
-    newvalues(/^\S+$/)
+    newvalues(%r{^\S+$})
   end
 
   newparam(:sourceformat) do
     desc 'The source format.'
     newvalues(:auto, :nfs, :glusterfs, :cifs)
   end
-  
+
   newparam(:target) do
     desc 'The target.'
-    newvalues(/(\/)?(\w)/)
+    newvalues(%r{(/)?(\w)})
   end
 
   newproperty(:active) do
@@ -102,5 +100,4 @@ Puppet::Type.newtype(:libvirt_pool) do
     newvalues(:true)
     newvalues(:false)
   end
-
 end
